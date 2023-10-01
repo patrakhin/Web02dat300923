@@ -1,6 +1,6 @@
 package com.example.web02dat300923;
 
-import com.example.storage.UserTokenStorage;
+import com.example.web02dat300923.storage.UserTokenStorage;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -12,6 +12,8 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.client.RestTemplate;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Controller
 public class LoginController {
@@ -27,9 +29,8 @@ public class LoginController {
     private String backendUrl;
 
 
-
     @GetMapping("/login")
-    public String loginPage(){
+    public String loginPage() {
         return "login_page";
     }
 
@@ -49,16 +50,34 @@ public class LoginController {
 
         // Обрабатываем ответ от бэкенда
         if (response.getStatusCode().is2xxSuccessful()) {
-            // Если запрос успешен, сохраняем токен в списке
-            // Предполагается, что у вас есть список, в который вы добавляете токены
-            // Например: tokenList.add(response.getBody());
-            model.addAttribute("message", "Токен успешно получен: " + response.getBody());
-            return "success"; // Имя страницы с сообщением об успешном получении токена
-        } else {
-            // Если запрос неуспешен, обрабатываем ошибку (например, выводим сообщение об ошибке на странице)
-            model.addAttribute("error", "Ошибка при получении токена. Пожалуйста, попробуйте еще раз.");
-            return "error"; // Имя страницы с сообщением об ошибке
+            // Если запрос успешен, извлекаем токен с использованием регулярного выражения
+            String responseBody = response.getBody();
+            System.out.println(responseBody);
+            String jwtToken = extractToken(responseBody);
+            System.out.println(jwtToken);
+
+            // Проверяем, успешно ли удалось извлечь токен
+            if (jwtToken != null) {
+                // Сохраняем токен в списке
+                userTokenStorage.addToken(username, jwtToken);
+
+                // Перенаправляем пользователя на страницу manager1
+                return "redirect:/manager1";
+            }
         }
+        // Если запрос неуспешен или токен не был получен, обрабатываем ошибку
+        return "error";
+    }
+
+    // Метод для извлечения токена с использованием регулярного выражения
+    private String extractToken(String responseBody) {
+        Pattern pattern = Pattern.compile("\"jwt-token\":\"([^\"]+)\"");
+        Matcher matcher = pattern.matcher(responseBody);
+
+        if (matcher.find()) {
+            return matcher.group(1);
+        }
+        return null;
     }
 }
 

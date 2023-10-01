@@ -1,4 +1,4 @@
-package com.example.storage;
+package com.example.web02dat300923.storage;
 
 import org.springframework.stereotype.Component;
 
