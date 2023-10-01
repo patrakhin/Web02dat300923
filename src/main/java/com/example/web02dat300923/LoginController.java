@@ -1,5 +1,7 @@
 package com.example.web02dat300923;
 
+import com.example.storage.UserTokenStorage;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -14,8 +16,17 @@ import org.springframework.web.client.RestTemplate;
 @Controller
 public class LoginController {
 
+    private final UserTokenStorage userTokenStorage;
+
+    @Autowired
+    public LoginController(UserTokenStorage userTokenStorage) {
+        this.userTokenStorage = userTokenStorage;
+    }
+
     @Value("${backend.url}") // URL бэкенда, указанный в application.properties
     private String backendUrl;
+
+
 
     @GetMapping("/login")
     public String loginPage(){
